@@ -1,0 +1,88 @@
+#!/usr/bin/expect
+
+set hostlist [open hostlist.txt]
+# hostlist.txt文件中每台路由器的ip地址和密码分两行写入
+
+# while循环读取文件中的每一行并存入ip变量中
+while {[gets $hostlist ip] != -1} {
+	set password [gets $hostlist]
+	# 读取密码
+
+	set timeout 10
+	# 设置超时参数
+
+	spawn ssh yddchsc@$ip
+	# 这里用户名为了方便直接使用了设置成一样的用户名
+
+	expect {
+		"*yes/no" {
+			send "yes\r"
+			exp_continue
+			# 重新执行这个expect块
+		}
+		"Password:" {send "$password\r"}
+        "No route to host" {
+            log_file -noappend ${ip}.txt
+			send_log "ssh: connect to host 10.1.1.10 port 22: No route to host\r"
+			log_file
+			continue
+        }
+		default: {
+			log_file -noappend ${ip}.txt
+			send_log "login time out\r"
+			log_file
+			continue
+		}
+	}
+	expect {
+		"*>" {send "enable\r"}
+
+		# 捕获登录密码错误的情况
+		"Password:" {
+			log_file -noappend ${ip}.txt
+			send_log "password or username error\r"
+			log_file
+			continue
+		}
+
+		# 捕获登录超时的情况
+		default: {
+			log_file -noappend ${ip}.txt
+			send_log "enable time out\r"
+			log_file
+			continue
+		}
+	}
+	expect {
+		"*#" {send "terminal length 0\r"}
+		"Password:" {send "$password\r"}
+	}
+	expect {
+		"*#" {send "terminal length 0\r"}
+
+		# 捕获enable密码错误的情况
+		"Password:" {
+			log_file -noappend ${ip}.txt
+			send_log "enable password error\r"
+			log_file
+			continue
+		}
+	}
+	expect "*#" {send "show run\r"}
+	
+	log_file -noappend ${ip}.txt
+
+	expect {
+		"*#" {
+			log_file
+			continue
+		}
+		default {
+			send_log "enable time out\r"
+			log_file
+			continue
+		}
+	}
+}
+close $hostlist
+expect eof

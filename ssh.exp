@@ -21,12 +21,12 @@ while {[gets $hostlist ip] != -1} {
 			# 重新执行这个expect块
 		}
 		"Password:" {send "$password\r"}
-        "No route to host" {
-            log_file -noappend ${ip}.txt
+		"No route to host" {
+            	log_file -noappend ${ip}.txt
 			send_log "ssh: connect to host 10.1.1.10 port 22: No route to host\r"
 			log_file
 			continue
-        }
+        	}
 		default: {
 			log_file -noappend ${ip}.txt
 			send_log "login time out\r"

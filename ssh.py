@@ -32,10 +32,12 @@ def ssh_login(ip, password, fout, child):
         child.expect ('Password: ')
         # 输入密码.
         child.sendline(password)
-        ssh_enable(ip, password, fout, child)
+        child = ssh_enable(ip, password, fout, child)
+        return child
     elif i == 1:
         child.sendline(password)
-        ssh_enable(ip, password, fout, child)
+        child = ssh_enable(ip, password, fout, child)
+        return child
     elif i == 2:
         child.sendline("No route to host:")
         return None
@@ -54,15 +56,17 @@ def ssh_enable(ip, password, fout, child):
         return None
     else:
         child.sendline('enable')
+        return child
 
-#进入特权模式是否成功判断
+#进入特权模式输入密码
 def ssh_checkenable(ip, password, fout, child):
     i = child.expect(['#','Password:',pexpect.TIMEOUT])
-
     if i == 0:
         child.sendline('terminal length 0')
+        return child
     elif i == 1:
         child.sendline(password)
+        return child
     else:
         child.sendline('time out:')
         return None
@@ -73,6 +77,7 @@ def ssh_length(ip, password, fout, child):
 
     if i == 0:
         child.sendline('terminal length 0')
+        return child
     elif i == 1:
         child.sendline('enable password error:')
         return None
@@ -85,6 +90,7 @@ def ssh_show(ip, password, fout, child):
     i = child.expect(['#',pexpect.TIMEOUT])
     if i == 0:
         child.sendline('show run')
+        return child
     else:
         child.sendline('time out')
         return None
@@ -98,20 +104,30 @@ def ssh_start(user, ip, password):
     print ip
     child.logfile = fout
 
-    ssh_login(ip, password, fout, child)
-    ssh_checkenable(ip, password, fout, child)
-    ssh_length(ip, password, fout, child)
-    ssh_show(ip, password, fout, child)
+    child = ssh_login(ip, password, fout, child)
+    if(child == None):
+        return None
+    child = ssh_checkenable(ip, password, fout, child)
+    if(child == None):
+        return None
+    child = ssh_length(ip, password, fout, child)
+    if(child == None):
+        return None
+    child = ssh_show(ip, password, fout, child)
+    if(child == None):
+        return None
     
     #必须使用sleep函数才能捕获到show run的输出
     time.sleep(1)
 
     i = child.expect(['#',pexpect.TIMEOUT])
-    fout.close()
+
     if i == 0:
+        fout.close()
         return child
     else:
         child.sendline('time out')
+        fout.close()
         return None
 def main ():
     #生成四个线程
@@ -138,7 +154,8 @@ class Threadshow(threading.Thread):
             #循环从队列中获取数据
             data = self.queue.get()
             child = ssh_start('yddchsc', data['ip'], data['password'])
-            child.close()
+            if child != None:
+                child.close()
             #通知队列任务完成
             #每次从queue中get一个数据之后，当处理好相关问题，最后调用该方法，以提示queue.join()是否停止阻塞，让线程向前执行或者退出
             self.queue.task_done()

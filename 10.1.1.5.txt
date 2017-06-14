@@ -1,0 +1,11 @@
+Password: yddchsc5
+
+
+
+c2691>enable
+
+c2691>enable
+Password: yddchsc5
+
+
+Password: enable password error:

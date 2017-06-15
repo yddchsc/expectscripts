@@ -1,2 +1,4 @@
 ssh: connect to host 10.1.1.8 port 22: No route to host
 No route to host:
+ssh: connect to host 10.1.1.8 port 22: No route to host
+No route to host:

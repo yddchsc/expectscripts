@@ -128,6 +128,7 @@ def ssh_start(user, ip, password):
         return None
 
 def main ():
+    timestart = time.time()
     #生成四个线程
     for i in range(4):
         t = Threadshow(queue)
@@ -142,6 +143,7 @@ def main ():
     
     #阻塞，直到queue中的数据均被删除或者处理。为队列中的每一项都调用一次。
     queue.join()
+    print "spend time:"+str(time.time()-timestart)
 
 class Threadshow(threading.Thread):
     def __init__(self,queue):

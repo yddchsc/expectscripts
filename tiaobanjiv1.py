@@ -75,16 +75,19 @@ def telnetCheck(ip,outputString):
 
 	#telnetcheck.logfile = telnetfout
 
-	check = telnetcheck.expect(["username","refused","Connection closed","timed out",pexpect.TIMEOUT,pexpect.EOF],timeout=None)
-	if check == 0:
+	check = telnetcheck.expect(["sername","\*\*\*\*\*\*\*\*","ogin","refused","Connection closed","timed out",pexpect.TIMEOUT,pexpect.EOF],timeout=10)
+
+	#print telnetcheck.before
+
+	if check == 0 or check == 1 or check == 2:
 		outputString += "1\t"
-	elif check == 1:
-		outputString += "refused\t"
-	elif check == 2:
-		outputString += "closed\t"
 	elif check == 3:
-		outputString += "TimedOut\t"
+		outputString += "refused\t"
 	elif check == 4:
+		outputString += "closed\t"
+	elif check == 5:
+		outputString += "TimedOut\t"
+	elif check == 6:
 		outputString += "out10s\t"
 	else:
 		outputString = outputString + ' '.join(telnetcheck.before.split('\n')) + '\t'
@@ -93,18 +96,23 @@ def telnetCheck(ip,outputString):
 
 def sshCheck(ip,outputString):
 	print('ssh '+ip)
-	sshcheck = pexpect.spawn("ssh noccheck@%s" % (ip))
+	sshcheck = pexpect.spawn("ssh -p 22 noccheck@%s" % (ip))
 
 	#sshcheck.logfile = sshfout
 
-	check = sshcheck.expect(["username","refused","timed out",pexpect.TIMEOUT,pexpect.EOF],timeout=None)
-	if check == 0:
+	check = sshcheck.expect(["assword","yes/no",'o route to host',"refused","timed out",pexpect.TIMEOUT,pexpect.EOF],timeout=10)
+
+	#print sshcheck.before
+
+	if check == 0 or check == 1:
 		outputString += "1\n"
-	elif check == 1:
-		outputString += "refused\n"
 	elif check == 2:
-		outputString += "TimedOut\n"
+		outputString += "noRoute\n"
 	elif check == 3:
+		outputString += "refused\n"
+	elif check == 4:
+		outputString += "TimedOut\n"
+	elif check == 5:
 		outputString += "out10s\n"
 	else:
 		outputString = outputString + ' '.join(sshcheck.before.split('\n')) + '\n'

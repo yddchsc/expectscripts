@@ -58,7 +58,7 @@ def telnetCheck(ip):
 	return telnetcheck
 
 def sshCheck(ip):
-	sshcheck = pexpect.spawn("ssh noccheck@%s" % (ip))
+	sshcheck = pexpect.spawn("ssh xxxxxx@%s" % (ip))
 
 	sshcheck.logfile = sshfout
 
